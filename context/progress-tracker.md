@@ -4,24 +4,24 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Not started. Context files completed 2026-07-12; no code exists yet.
+- Planning complete (2026-07-18). Build plan and per-unit specs written to `context/specs/` (00-build-plan + units 01–10); no code exists yet.
 
 ## Current Goal
 
-- None yet. First step: decompose v1 into ordered build units (`context/specs/00-build-plan.md`) before writing any code.
+- Begin unit 01 (workspace scaffold & config) once Trevor has reviewed the build plan.
 
 ## Completed
 
-- None yet.
+- v1 decomposition: `context/specs/00-build-plan.md` and specs 01–10 (2026-07-18).
 
 ## In Progress
 
-- None yet.
+- None.
 
 ## Next Up
 
-- Decompose the v1 features (see `project-overview.md` → In Scope) into ordered build units with per-unit specs.
-- First likely build unit after planning: scaffold the pnpm workspace (`server/`, `web/`, `shared/`) with typecheck/lint/test/build scripts.
+- Trevor reviews `context/specs/` — especially the three file-format proposals needing sign-off (card ID/naming in spec 02, session-log format in spec 07, inbox format in spec 08).
+- Unit 01: scaffold the pnpm workspace (`server/`, `web/`, `shared/`) with typecheck/lint/test/build scripts, config loader, scratch vault.
 
 ## Open Questions
 
