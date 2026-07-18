@@ -23,7 +23,7 @@ Engram is a local-first spaced-repetition flashcard app that runs as a thin sche
 7. User finishes the review queue (or it was empty/short, per the floor rule) and proceeds to inbox triage.
 8. App shows any pending inbox captures (one-line raw text entries added any time during the day via the always-available capture action) and any leech-flagged cards awaiting rewrite.
 9. For each inbox item, user either converts it into a new card by choosing a card-type template (symptom→cause, decision→trade-off, prediction, problem, or definition) and filling in a situation-shaped front, a back, and a required `source`, or discards it.
-10. For each leech-flagged card, user is prompted to rewrite the front into a situation-shaped cue (or delete the card); once rewritten, the card re-enters normal rotation (how its box and lapse count are handled post-rewrite is an open question tracked in `progress-tracker.md`).
+10. For each leech-flagged card, user is prompted to rewrite the front into a situation-shaped cue (or delete the card); once rewritten, the card re-enters normal rotation with fully reset scheduling state (`box` → 1, `lapses` → 0) — the rewrite created a new cue, so the card earns its intervals from scratch like a new card.
 11. Session ends. Overflow due cards not reached today (if the cap was hit) carry forward to tomorrow, ordered by overdue-ness, with no backlog messaging or guilt mechanic. User closes the app/tab; the server keeps running or is stopped independently of session state, since all state lives in the vault files.
 
 ## Features

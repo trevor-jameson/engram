@@ -30,7 +30,7 @@ There is no database. **The vault's markdown files are the sole source of truth 
 
 - **Card files (filesystem, `.md`)**: one card per markdown file, stored under a subfolder of the configured vault path (v1: `vault/flashcards/`). YAML frontmatter holds review state (`box`, `due`, `lapses`, `created`, `source`, `type`); the markdown body holds the Q/A content. These files must remain human-editable, Obsidian-linkable, and greppable at all times — they are not a serialization format the app owns, they are the record.
 - **Session logs (filesystem, `.md`)**: free-recall brain dumps written as markdown files in `logs/`, beside the card files, for future triage to mine for knowledge gaps.
-- **Vault path**: configurable to any filesystem path via env var or config file — not hardcoded, not assumed to be inside the repo.
+- **Vault path**: configurable to any filesystem path — not hardcoded, not assumed to be inside the repo. Source of truth is `engram.config.json` in the repo root (gitignored), holding `vaultPath` and `port` (default 4321); env vars `ENGRAM_VAULT_PATH` and `ENGRAM_PORT` override when set (used e.g. to point the dev server at a scratch vault without editing the file).
 - **In-memory/derived state (server process)**: anything the scheduler or API computes (queues, due-card lists, leech flags) is derived on demand from the frontmatter of the files and discarded/recomputed freely; it is never persisted as an independent store.
 
 ## Auth and Access Model

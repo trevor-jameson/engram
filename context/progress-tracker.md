@@ -25,10 +25,7 @@ Update this file after every meaningful implementation change.
 
 ## Open Questions
 
-- Post-rewrite leech state: after a leech's front is rewritten, what happens to its `box` and `lapses`? (If `lapses` stays ≥4, the card would immediately re-flag on its next lapse; a reset to 0 treats the rewrite as a new card front. Needs a user decision before implementing the rewrite flow.)
-- Icon set: `@mui/icons-material` proposed as the zero-extra-dependency default; unconfirmed.
-- Exact dev/prod port and the config-file format (vs env var) for the vault path.
-- Actual vault path on Trevor's machine (needed only at runtime configuration, never hardcoded).
+- Actual vault path on Trevor's machine (needed only at runtime configuration, never hardcoded — goes in `engram.config.json` at first run).
 - Free-recall grading and scheduler feedback from recall: deferred "for now" — revisit after v1.
 
 ## Architecture Decisions
@@ -36,6 +33,9 @@ Update this file after every meaningful implementation change.
 - Hono over Express for the server: lighter, TypeScript-first, fits the thin-scheduler ethos (decided during context drafting, 2026-07-12).
 - gray-matter (frontmatter), unified/remark (markdown), KaTeX bundled locally (math) as the file/rendering toolchain — mainstream, minimal choices matching invariants 2 and 3.
 - pnpm as the only package manager.
+- Leech post-rewrite state: full reset — `box` → 1, `lapses` → 0. The rewrite created a new cue, so the card earns its intervals from scratch (decided 2026-07-18).
+- Configuration: `engram.config.json` in the repo root (gitignored) holds `vaultPath` and `port` (default 4321); `ENGRAM_VAULT_PATH` / `ENGRAM_PORT` env vars override when set (decided 2026-07-18).
+- Icon set confirmed: `@mui/icons-material` (decided 2026-07-18).
 
 ## Session Notes
 

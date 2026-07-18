@@ -37,7 +37,7 @@ Do not modify the following unless explicitly instructed:
 
 - `context/*` — except `context/progress-tracker.md`, which must be updated at the end of every work session
 - Anything inside a configured vault path
-- `.env` and other config files holding the vault path
+- `engram.config.json`, `.env`, and any other config file holding the vault path
 
 Never write to the real vault during development. Run all file-I/O tests against fixture folders. Point the dev server at a scratch vault, never the real vault.
 

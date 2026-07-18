@@ -78,8 +78,6 @@ library. Two theme objects (light/dark) are selected at runtime by
 
 ## Icons
 
-No icon set has been confirmed (open question in
-`progress-tracker.md`). Until decided, default to
-`@mui/icons-material` — it ships with MUI and adds no extra
-dependency — and keep icon usage minimal, consistent with the
-calm/content-first theme.
+Icon set: `@mui/icons-material` (confirmed) — it ships with
+MUI and adds no extra ecosystem. Keep icon usage minimal,
+consistent with the calm/content-first theme.
