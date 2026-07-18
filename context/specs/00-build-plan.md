@@ -37,17 +37,16 @@ done and verified.
   dev toolchain of unit 01) require written justification in
   `progress-tracker.md` first.
 
-## File-format decisions requiring user sign-off
+## File-format decisions (all signed off 2026-07-18)
 
-These formats outlive the app (`code-standards.md`). Each must be signed off
-by Trevor **before** its unit starts; proposals live in the unit specs:
+These formats outlive the app (`code-standards.md`); any future change again
+requires explicit user sign-off. The adopted formats live in the unit specs:
 
-1. **Card file naming / card ID scheme** — proposal in `02-vault-io.md`.
-   Blocks unit 02.
-2. **Session-log file format** (name, frontmatter, body layout) — proposal in
-   `07-free-recall.md`. Blocks unit 07.
-3. **Inbox capture storage format** — proposal in `08-inbox.md`. Blocks
-   unit 08.
+1. **Card file naming / card ID scheme** — `02-vault-io.md`. Amendment:
+   leech rewrites never rename the file.
+2. **Session-log file format** — `07-free-recall.md`.
+3. **Inbox capture storage format** — `08-inbox.md`. Amendment: inbox items
+   are deleted by exact line-content match, never by index.
 
 The card frontmatter schema itself (`box`, `due`, `lapses`, `created`,
 `source`, `type`) is already signed off in `architecture.md`.

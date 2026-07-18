@@ -1,8 +1,10 @@
 # Unit 08 — Inbox capture & triage
 
-## Sign-off required before starting
+## Format sign-off
 
-**Inbox storage format (proposal):** a single `inbox.md` file beside
+Signed off by Trevor 2026-07-18.
+
+**Inbox storage format:** a single `inbox.md` file beside
 `flashcards/` in the vault; each capture is one markdown list item
 (`- <text>`) appended to the end — trivially editable by hand or from
 Obsidian on any device that syncs the vault. Triage removes the item's line
@@ -23,7 +25,9 @@ captures into cards via type templates, with `source` impossible to omit.
 2. **`server/api/`**:
    - `POST /api/inbox` `{ text }` → appended (400 on empty text).
    - `GET /api/inbox` → items.
-   - `DELETE /api/inbox/:index-or-key` → discard.
+   - `DELETE /api/inbox` `{ text }` → discard by exact line-content match,
+     never by index — the file may be edited externally (Obsidian, sync)
+     between listing and deleting. 404 if no matching line exists.
    - `POST /api/cards` `{ front, back, source, type }` → validates all four
      (reject missing/empty `source` — no creation path may omit it, invariant
      6), writes the card file, returns the new card; optionally removes the

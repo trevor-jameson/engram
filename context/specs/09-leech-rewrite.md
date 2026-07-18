@@ -30,6 +30,9 @@ scheduling state.
 
 - The scheduler never touches body content; the rewrite endpoint is a
   user-initiated edit path (invariant 5 holds because the user typed it).
+- A rewrite never renames the card file: the filename keeps the old front's
+  slug so Obsidian backlinks and the card's ID stay stable. The slug/front
+  mismatch is cosmetic and accepted (decided 2026-07-18).
 - A rewritten card re-enters normal rotation immediately (due tomorrow, box
   1); it must reappear in queues and be re-flaggable only after 4 fresh
   lapses.

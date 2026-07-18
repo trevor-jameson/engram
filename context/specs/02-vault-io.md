@@ -1,8 +1,17 @@
 # Unit 02 — Shared types & vault card I/O
 
-## Sign-off required before starting
+## Format sign-off
 
-**Card ID / file naming scheme (proposal):** a card's ID is its filename
+Signed off by Trevor 2026-07-18. Amendment: a leech rewrite never renames
+the card file (see `09-leech-rewrite.md`).
+
+**Card body format** (per the signed-off reference schema in
+`design-brief.md`): the body is `Q:`/`A:`-delimited — the front runs from
+the line beginning `Q:` up to the first line beginning `A:`; the back is
+everything from that `A:` line on. Both sections may span multiple lines
+(code fences, `$$...$$` blocks).
+
+**Card ID / file naming scheme:** a card's ID is its filename
 without the `.md` extension, unique within the vault's `flashcards/` folder.
 Files created by the app are named `<kebab-slug-of-front>-<YYYYMMDDHHmmss>.md`
 (slug truncated ~40 chars) to guarantee uniqueness without an ID field in

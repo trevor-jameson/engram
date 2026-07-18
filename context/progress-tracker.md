@@ -20,7 +20,6 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Trevor reviews `context/specs/` — especially the three file-format proposals needing sign-off (card ID/naming in spec 02, session-log format in spec 07, inbox format in spec 08).
 - Unit 01: scaffold the pnpm workspace (`server/`, `web/`, `shared/`) with typecheck/lint/test/build scripts, config loader, scratch vault.
 
 ## Open Questions
@@ -36,6 +35,7 @@ Update this file after every meaningful implementation change.
 - Leech post-rewrite state: full reset — `box` → 1, `lapses` → 0. The rewrite created a new cue, so the card earns its intervals from scratch (decided 2026-07-18).
 - Configuration: `engram.config.json` in the repo root (gitignored) holds `vaultPath` and `port` (default 4321); `ENGRAM_VAULT_PATH` / `ENGRAM_PORT` env vars override when set (decided 2026-07-18).
 - Icon set confirmed: `@mui/icons-material` (decided 2026-07-18).
+- File formats signed off 2026-07-18: card ID = filename sans `.md`, app-created files `<front-slug>-<timestamp>.md` (rewrites never rename); session log `logs/YYYY-MM-DD.md` with `date`/`sources` frontmatter, append on same-day re-run; inbox = single `inbox.md`, one list item per capture, no metadata, deletion by exact line match. Details in `context/specs/` 02/07/08.
 
 ## Session Notes
 

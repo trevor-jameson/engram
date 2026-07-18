@@ -1,8 +1,10 @@
 # Unit 07 — Free recall & session log
 
-## Sign-off required before starting
+## Format sign-off
 
-**Session-log format (proposal):** one markdown file per session at
+Signed off by Trevor 2026-07-18.
+
+**Session-log format:** one markdown file per session at
 `logs/<YYYY-MM-DD>.md` beside `flashcards/` in the vault. Frontmatter:
 `date`, `sources` (list of `source` values that appeared in that session's
 queue). Body: `## Free recall` followed by the verbatim brain dump. The file
