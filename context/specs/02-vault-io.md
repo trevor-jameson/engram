@@ -6,7 +6,7 @@ Signed off by Trevor 2026-07-18. Amendment: a leech rewrite never renames
 the card file (see `09-leech-rewrite.md`).
 
 **Card body format** (per the signed-off reference schema in
-`design-brief.md`): the body is `Q:`/`A:`-delimited — the front runs from
+`architecture.md` §Storage Model): the body is `Q:`/`A:`-delimited — the front runs from
 the line beginning `Q:` up to the first line beginning `A:`; the back is
 everything from that `A:` line on. Both sections may span multiple lines
 (code fences, `$$...$$` blocks).

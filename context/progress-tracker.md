@@ -1,61 +1,43 @@
 # Progress Tracker
 
-Update this file after every meaningful implementation change.
+Update after every meaningful implementation change. Retention policy: `ai-workflow-rules.md` §Keeping Docs in Sync — keep this file to roughly one page; completed units compact to one line; durable decisions migrate to their owning context file.
 
 ## Current Phase
 
 - Implementation, units 01–05 complete (2026-07-19).
 
-## Current Goal
+## Next Up
 
-- Begin unit 06 (review flow UI & card rendering) per `context/specs/06-review-ui.md`.
-
-## Completed
-
-- v1 decomposition: `context/specs/00-build-plan.md` and specs 01–10 (2026-07-18).
-- Unit 01 — workspace scaffold & config (2026-07-18): pnpm workspace (`server/`, `web/`, `shared/`), strict TS everywhere (base tsconfig with `erasableSyntaxOnly` so Node 22.18+ runs server TS natively — no runner dependency), ESLint flat config with `no-explicit-any` as error, root scripts `typecheck`/`lint`/`test`/`build`/`dev`. Config loader `server/vault/config.ts` (file → env-override → defaults, fails fast without a vault path; 9 unit tests against fixture configs). `engram.config.example.json` committed; `engram.config.json` and `scratch-vault/` gitignored. Scratch vault created with 3 hand-written sample cards (code fence + KaTeX coverage). Verified: all four root scripts pass; `pnpm dev` starts server bound to 127.0.0.1:4321 against the scratch vault (via `ENGRAM_VAULT_PATH`) and the Vite placeholder on 127.0.0.1:5173.
-
-- Unit 02 — shared types & vault card I/O (2026-07-18): `shared/` exports `Card`, `CardType`/`CARD_TYPES`, `CardFrontmatter`, `CardError` shapes, and `splitCardBody` (the signed-off `Q:`/`A:` split). `server/vault/cards.ts` implements `openVault(vaultPath)` → `listCards` (invalid files reported, never dropped or rewritten), `readCard`, `parseCard` (gray-matter + boundary validation of every frontmatter field; unquoted YAML dates normalized to `YYYY-MM-DD` strings), `writeCard` (rejects source-less or non-`Q:/A:` cards), `updateFrontmatter` (scheduler-facing; only `box`/`due`/`lapses`), `deleteCard`, and `generateCardId` (signed-off `<slug>-<YYYYMMDDHHmmss>` scheme). Card IDs validated against path traversal; API surface never exposes paths. 52 tests pass, all file I/O against fixture folders/temp dirs. Verified byte-stability end-to-end on a copy of the scratch vault: patching `box`+`due` changed exactly those two lines, body (incl. `$$...$$`) byte-identical.
-
-- Unit 03 — scheduler core (2026-07-19): pure functions in `server/scheduler/` — `dates.ts` (`addDays`, `isDue`), `leitner.ts` (`grade` pass/lapse with box cap/floor and per-box due dates, `resetForRewrite`, `newCardDefaults`), `leech.ts` (`isLeech`, threshold 4, derived on read — never written), `queue.ts` (`buildQueue`: leech exclusion → weighted cap 25 most-overdue-first with problem cards counting 2 → floor-as-fill 5 → source interleaving with injectable RNG). `SchedulerPatch`/`GradeResult` moved to `shared/` so the scheduler needs no vault import. Purity enforced by a scoped ESLint `no-restricted-imports` rule (fs/http/net/child_process and `**/vault/**` banned in `server/scheduler/`), negative-tested. 36 scheduler tests; suite total 88, all green.
-
-- Unit 04 — session & grading API (2026-07-19): `server/api/app.ts` exposes `createApp(vault, { today?, rng? })` (injectable clock/RNG for deterministic tests) with `GET /api/queue` (rebuilt from files per request; DTOs with split front/back plus `{ due, queued, overflow }` counts), `GET /api/cards` (frontmatter summaries + invalid-file report), `GET /api/cards/:id`, and `POST /api/cards/:id/grade` (validates body, 404 unknown id, 400 bad input, 409 leech; scheduler computes patch, `updateFrontmatter` persists). `VaultError` codes map centrally to HTTP statuses via `app.onError`. DTO types (`CardDTO`, `CardSummary`, `QueueResponse`, `CardsResponse`, `QueueCounts`) live in `shared/`; `server/api/dto.ts` derives `leech` via the scheduler. `server/index.ts` now serves the Hono app on 127.0.0.1 via `@hono/node-server`. 15 route tests (103 total). Manually verified with curl against the scratch vault: queue, pass/lapse grading visible in frontmatter on disk, queue rebuilt consistently after restart (success criterion 11); grep confirms no outbound-request code in `server/`.
-
-- Unit 05 — web shell & theme (2026-07-19): `web/src/theme.ts` implements every `ui-context.md` token in two `createTheme` objects (palette slots light/dark, `shape.borderRadius` 8, Card/Dialog 12, pill chips, shadows capped at elevation 2, `.engram-card-content` class at 1.125rem/1.7) selected by `prefers-color-scheme` with no manual toggle. Layout: persistent minimal header with inert inbox-capture field (`Header.tsx`), single centered 720px column, linear recall → review → triage state machine with labeled placeholder screens. Typed API client (`web/src/api/client.ts`) wraps the four unit-04 routes with `shared/` DTOs; dev-mode Vite proxy keeps `/api` same-origin (both ends localhost). Verified: shell serves, queue data flows through the proxy into the review placeholder's fetch path, 404s carry typed errors; no hex values outside `theme.ts`; production bundle's only URL strings are inert constants (SVG namespace, framework error-doc links) — zero external asset loads.
+- Unit 06: review flow UI & card rendering (`web/` — one-card-at-a-time review, markdown + code + KaTeX rendering, pass/lapse grading) per `context/specs/06-review-ui.md`.
 
 ## In Progress
 
 - None.
 
-## Next Up
-
-- Unit 06: review flow UI & card rendering (`web/` — one-card-at-a-time review, markdown + code + KaTeX rendering, pass/lapse grading).
-
 ## Open Questions
 
-- Actual vault path on Trevor's machine (needed only at runtime configuration, never hardcoded — goes in `engram.config.json` at first run).
+- Actual vault path on Trevor's machine (runtime configuration only, never hardcoded — goes in `engram.config.json` at first run).
 - Free-recall grading and scheduler feedback from recall: deferred "for now" — revisit after v1.
 
-## Architecture Decisions
+## Completed
 
-- Hono over Express for the server: lighter, TypeScript-first, fits the thin-scheduler ethos (decided during context drafting, 2026-07-12).
-- gray-matter (frontmatter), unified/remark (markdown), KaTeX bundled locally (math) as the file/rendering toolchain — mainstream, minimal choices matching invariants 2 and 3.
-- pnpm as the only package manager.
-- Leech post-rewrite state: full reset — `box` → 1, `lapses` → 0. The rewrite created a new cue, so the card earns its intervals from scratch (decided 2026-07-18).
-- Configuration: `engram.config.json` in the repo root (gitignored) holds `vaultPath` and `port` (default 4321); `ENGRAM_VAULT_PATH` / `ENGRAM_PORT` env vars override when set (decided 2026-07-18).
-- Icon set confirmed: `@mui/icons-material` (decided 2026-07-18).
-- Unit 01 dependencies (all dev-only, pre-justified in `specs/01-scaffold.md`): `typescript` (pinned ^5.9 — typescript-eslint 8.x cannot parse under TS 7, which pnpm resolved first), `eslint` + `@eslint/js` + `typescript-eslint` (lint, enforces no-`any`), `vitest` (test runner), `vite` (web dev/build), `@types/node`. No runtime dependencies yet: the unit-01 placeholder server uses `node:http`; Hono is added in unit 04 when real routes exist. Node 22.18+ type stripping runs server TS directly, so no tsx/ts-node.
-- Unit 02: `gray-matter` added as the server's first runtime dependency (pre-pinned in the build plan; sole frontmatter parser/writer per code-standards). `@engram/shared` consumed as a workspace source package (`exports` → `index.ts`; Node type stripping resolves it through the pnpm symlink, no build step).
-- Unit 02: `updateFrontmatter` writes surgically — it replaces only the patched `box`/`due`/`lapses` lines in the raw frontmatter text rather than re-serializing through gray-matter, because js-yaml re-serialization would reformat user-authored YAML (date quoting, spacing) and break the byte-stability rule. gray-matter remains the only parser, and the writer for app-authored files (`writeCard`).
-- Unit 02: server `build` script changed from emitting `dist/` to `tsc --noEmit` — nothing executes compiled output (Node runs TS source via type stripping), and emitting would complicate cross-package imports for no consumer.
-- Unit 03: at the weighted-cap boundary, queue selection stops at the first card that does not fit (strict overdue-ness priority) rather than skipping it for a later lighter card — no card is ever queued ahead of a more-overdue one, and overflow carries by overdue-ness exactly as specced (decided 2026-07-19; the spec left the boundary case open).
-- Unit 03: interleaving is two-regime — when the dominant source exceeds ceil(n/2), fractional-position spreading places minority cards evenly and accepts unavoidable same-source runs; otherwise a greedy largest-remaining-source pick guarantees zero adjacent same-source cards. RNG is injectable for deterministic tests.
-- Unit 04: `hono` + `@hono/node-server` added (Hono pre-pinned; the node adapter is Hono's official way to bind a Node listener and is what enforces the 127.0.0.1-only bind). "Today" is computed in the machine's local timezone at the API layer — a session at 11pm belongs to the local day, and the pure scheduler just receives the string.
-- Server bind host made configurable (2026-07-19, Trevor's request): `host` in `engram.config.json` / `ENGRAM_HOST` env override, default `127.0.0.1`. Default preserves the localhost-only invariant; a non-loopback value is an explicit user override. `architecture.md` config paragraph updated accordingly.
-- Unit 05 dependencies: `react`/`react-dom` + types, `@mui/material`, `@mui/icons-material`, `@vitejs/plugin-react` (all pre-pinned), and `@emotion/react`/`@emotion/styled` (MUI's required styling peer — part of the MUI decision, not a new choice).
-- File formats signed off 2026-07-18: card ID = filename sans `.md`, app-created files `<front-slug>-<timestamp>.md` (rewrites never rename); session log `logs/YYYY-MM-DD.md` with `date`/`sources` frontmatter, append on same-day re-run; inbox = single `inbox.md`, one list item per capture, no metadata, deletion by exact line match. Details in `context/specs/` 02/07/08.
+- v1 decomposition: `context/specs/00-build-plan.md` and specs 01–10 (2026-07-18).
+- Unit 01 — workspace scaffold & config: pnpm workspace, strict TS, ESLint, config loader, scratch vault (2026-07-18).
+- Unit 02 — shared types & vault card I/O: parse/write/update with byte-stable frontmatter patching, 52 tests (2026-07-18).
+- Unit 03 — scheduler core: pure Leitner/queue/leech functions, purity lint-enforced, 36 tests (2026-07-19).
+- Unit 04 — session & grading API: Hono routes over vault+scheduler, injectable clock/RNG, 15 route tests (2026-07-19).
+- Unit 05 — web shell & theme: full `ui-context.md` token themes, 720px column, recall→review→triage shell, typed API client (2026-07-19).
+- Context-drift mitigation pass: fact-ownership map + drift-repair rule in `ai-workflow-rules.md`, de-dup of restated facts across context files, `design-brief.md` retired (schema absorbed into `architecture.md`), `scripts/check-context-drift.sh` tripwire added to per-unit verification (2026-07-19).
+
+## Dependency Justifications
+
+All pre-pinned in the build plan / specs unless noted; zero-dep bias per `ai-workflow-rules.md`.
+
+- Dev-only (unit 01): `typescript` ^5.9 (pinned — typescript-eslint 8.x cannot parse TS 7), `eslint`/`@eslint/js`/`typescript-eslint`, `vitest`, `vite`, `@types/node`. No runtime TS runner: Node 22.18+ type stripping.
+- Runtime (unit 02): `gray-matter` — sole frontmatter parser/writer per `code-standards.md`.
+- Runtime (unit 04): `hono` + `@hono/node-server` (official Node adapter; enforces loopback bind).
+- Runtime (unit 05): `react`/`react-dom` + types, `@mui/material`, `@mui/icons-material`, `@vitejs/plugin-react`, `@emotion/react`/`@emotion/styled` (MUI's required styling peer — part of the MUI decision, not a new choice).
 
 ## Session Notes
 
-- The interview record lives at `context/.init-adrian-state.md`; it can be deleted once Trevor is satisfied with the context files.
-- Development must never touch the real vault: fixture folders for tests, a scratch vault for the dev server (see `ai-workflow-rules.md`).
+- The interview record lives at `context/.init-adrian-state.md`; historical — it may reference the retired `design-brief.md`. Delete once Trevor no longer wants the record.

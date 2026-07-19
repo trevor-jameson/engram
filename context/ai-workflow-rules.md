@@ -9,7 +9,7 @@ Build Engram incrementally using a spec-driven workflow. The seven files in `con
 - Work on exactly one build unit at a time.
 - Never start a new build unit while the current unit is unverified.
 - Prefer small, verifiable increments over large speculative changes.
-- Do not combine unrelated system boundaries in a single implementation step. The system boundaries are `server/vault/` (filesystem code only), `server/scheduler/` (pure logic, no I/O), `server/api/` (Hono routes), `web/` (React UI, API-only), and `shared/` (shared types).
+- Do not combine unrelated system boundaries (defined in `architecture.md` §System Boundaries) in a single implementation step.
 - Use pnpm for all package management. Never use npm.
 - Justify any new dependency in writing in `context/progress-tracker.md` before adding it. Default to zero dependencies — keep the scheduler thin.
 
@@ -48,13 +48,32 @@ Never write to the real vault during development. Run all file-I/O tests against
 
 ## Keeping Docs in Sync
 
-Update the relevant context file whenever implementation changes:
+### Fact ownership
 
-- System architecture or boundaries → `architecture.md`
-- Storage model decisions (card frontmatter schema, session-log format) → `architecture.md` — and get explicit user sign-off before implementing the change itself
-- Code conventions or standards → `code-standards.md`
-- Feature scope → `project-overview.md`
-- Work completed, in-progress, or blocked, plus new dependency justifications and open questions → `progress-tracker.md`
+Every fact class has exactly one owning file. Other files may point to the owner (`see architecture.md §Stack`) but must never restate its values (numbers, names, lists, hex codes).
+
+| Fact class | Sole owner |
+| --- | --- |
+| Stack, libraries, versions | `architecture.md` §Stack |
+| Folder boundaries | `architecture.md` §System Boundaries |
+| Invariants | `architecture.md` §Invariants |
+| Storage model, card/log/inbox file formats, config | `architecture.md` §Storage Model |
+| Feature scope, scheduler behavior and parameters (boxes, intervals, cap, floor, weighting, leech threshold) | `project-overview.md` |
+| The *why* behind learning-science rules (may cite parameter values alongside rationale) | `learning-principles.md` |
+| Color tokens, typography, radius, layout, icons | `ui-context.md` |
+| Coding conventions and per-folder enforcement rules | `code-standards.md` |
+| Process rules, dependency policy, verification steps | `ai-workflow-rules.md` |
+| Current state, next up, open questions, dependency justifications | `progress-tracker.md` |
+
+**Drift repair:** when a decision changes, edit only its owning file. If you find the same fact stated with values in two files, that is a bug — convert the non-owner to a pointer before continuing.
+
+### Update triggers
+
+Update the owning file whenever implementation changes it (storage-model/file-format changes additionally require explicit user sign-off before implementing). Work completed, in-progress, or blocked, plus new dependency justifications and open questions → `progress-tracker.md`.
+
+### Progress-tracker retention
+
+`progress-tracker.md` stays roughly one page: Current Phase / Next Up / Open Questions are live; completed work is compacted to one line per build unit; decisions with lasting value migrate to their owning file, the rest are deleted (git history is the archive). Never let it grow append-only.
 
 ## Before Moving to the Next Unit
 
@@ -65,6 +84,7 @@ A build unit is not "done" until all of the following pass:
 3. The six invariants defined in `context/architecture.md` hold. Verify in particular by round-tripping a card file through parse→write and confirming byte-stability except for intentionally changed frontmatter fields — this check exercises invariants 2 and 5 (the round-trip rule itself is a code-standards verification requirement, defined in `code-standards.md`).
 4. Manually drive the affected flow in the browser against the scratch vault.
 5. `pnpm build` passes.
-6. `progress-tracker.md` reflects the completed work.
+6. `scripts/check-context-drift.sh` passes (value-duplication tripwire across `context/`).
+7. `progress-tracker.md` reflects the completed work.
 
 Do not begin the next build unit until every item above is satisfied for the current unit.

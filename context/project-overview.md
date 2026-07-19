@@ -50,6 +50,8 @@ Engram is a local-first spaced-repetition flashcard app that runs as a thin sche
 - Review-queue cap of 25/day; card creation itself is unbounded.
 - Floor-as-fill of 5: if fewer than 5 cards are due, soonest-due cards are pulled forward to fill the queue to 5; this is never framed as an obligation.
 - Queue ordering: most-overdue-first up to the cap, then reordered so no two consecutive cards share `source` (ties random); `type: problem` cards count 2 against the cap, all other types count 1.
+- At the weighted-cap boundary, selection stops at the first card that does not fit (strict overdue-ness priority) — no card is ever queued ahead of a more-overdue one; the non-fitting card carries to overflow.
+- Interleaving is two-regime: when no source dominates, a greedy largest-remaining-source pick guarantees zero adjacent same-source cards; when one source exceeds half the queue, minority cards are spread evenly and unavoidable same-source runs are accepted rather than dropping due cards.
 - Overflow beyond the cap carries to the next day, ordered by overdue-ness; no backlog-guilt UI or messaging.
 - Leech detection: a card with 4+ lifetime lapses is flagged, removed from normal rotation, and routed to the rewrite flow until rewritten or deleted.
 
