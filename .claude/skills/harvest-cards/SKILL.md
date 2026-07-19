@@ -1,6 +1,6 @@
 ---
 name: harvest-cards
-description: Mine the current Claude session for demonstrated knowledge gaps, surprises, and notable technical learnings; draft flashcards per the Engram schema; write user-approved cards to scratch-vault/flashcards/.
+description: Mine the current Claude session for demonstrated knowledge gaps, surprises, and notable technical learnings; draft flashcards per the Engram schema; write user-approved cards to the real vault's flashcards/ folder.
 ---
 
 # harvest-cards — session-to-flashcards triage
@@ -56,8 +56,18 @@ a plain "which ones?" otherwise). Apply any edits he gives verbatim.
 
 ## Step 4 — Write approved cards
 
-Write each approved card to `scratch-vault/flashcards/` (and only there — never a
-real vault path from `engram.config.json`):
+Determine the target: read `vaultPath` from `engram.config.json` in the repo root
+and write to `<vaultPath>/flashcards/`. Harvested cards are *study content* — the
+"never write to the real vault" rule in `ai-workflow-rules.md` governs development
+(tests, dev server), not this user-invoked study action. Only if no
+`engram.config.json` exists, fall back to `scratch-vault/flashcards/` and tell
+Trevor the cards landed in the disposable dev vault.
+
+The real vault is a local git repo (`~/engram-vault`, initialized 2026-07-19).
+After writing, commit the new cards there:
+`git -C <vaultPath> add -A && git -C <vaultPath> commit -m "Harvest cards from Claude session <YYYY-MM-DD>."`
+
+Per card:
 
 - **Filename**: `<kebab-slug-of-front>-<YYYYMMDDHHmmss>.md` — slug from the front's
   key words, truncated ~40 chars; timestamp = now, incremented by one second per

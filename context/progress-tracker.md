@@ -16,7 +16,6 @@ Update after every meaningful implementation change. Retention policy: `ai-workf
 
 ## Open Questions
 
-- Actual vault path on Trevor's machine (runtime configuration only, never hardcoded — goes in `engram.config.json` at first run).
 - Free-recall grading and scheduler feedback from recall: deferred "for now" — revisit after v1.
 
 ## Completed
@@ -39,5 +38,7 @@ All pre-pinned in the build plan / specs unless noted; zero-dep bias per `ai-wor
 - Runtime (unit 05): `react`/`react-dom` + types, `@mui/material`, `@mui/icons-material`, `@vitejs/plugin-react`, `@emotion/react`/`@emotion/styled` (MUI's required styling peer — part of the MUI decision, not a new choice).
 
 ## Session Notes
+
+- Real vault established 2026-07-19: `~/engram-vault` (`flashcards/` + `logs/`), its own local-only git repo; `engram.config.json` written pointing at it. Dev server unaffected (its `dev` script pins `ENGRAM_VAULT_PATH=../scratch-vault`, which overrides the config). `/harvest-cards` now targets the real vault and commits there after writing.
 
 - The interview record lives at `context/.init-adrian-state.md`; historical — it may reference the retired `design-brief.md`. Delete once Trevor no longer wants the record.
