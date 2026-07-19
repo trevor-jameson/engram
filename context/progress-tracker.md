@@ -4,11 +4,11 @@ Update after every meaningful implementation change. Retention policy: `ai-workf
 
 ## Current Phase
 
-- Implementation, units 01–06 complete (2026-07-19).
+- Implementation, units 01–07 complete (2026-07-19).
 
 ## Next Up
 
-- Unit 07: free recall & session log (`server/vault/` + `server/api/` + `web/`, split steps) per `context/specs/07-free-recall.md`.
+- Unit 08: inbox capture & triage (`server/vault/` + `server/api/` + `web/`, split steps) per `context/specs/08-inbox.md`.
 
 ## In Progress
 
@@ -27,6 +27,7 @@ Update after every meaningful implementation change. Retention policy: `ai-workf
 - Unit 04 — session & grading API: Hono routes over vault+scheduler, injectable clock/RNG, 15 route tests (2026-07-19).
 - Unit 05 — web shell & theme: full `ui-context.md` token themes, 720px column, recall→review→triage shell, typed API client (2026-07-19).
 - Unit 06 — review flow UI & card rendering: shared `CardMarkdown` renderer (remark + GFM + locally bundled KaTeX), pure reveal/grade reducer, one-card-at-a-time `ReviewScreen` with retry-safe grading, 14 web tests, 5 scratch-vault render-check cards (2026-07-19).
+- Unit 07 — free recall & session log: `server/vault/logs.ts` (create/append `logs/YYYY-MM-DD.md`, read latest prior), recall-context + recall routes, real `RecallScreen` with prior-source prompt, 18 new tests (2026-07-19).
 - Context-drift mitigation pass: fact-ownership map + drift-repair rule in `ai-workflow-rules.md`, de-dup of restated facts across context files, `design-brief.md` retired (schema absorbed into `architecture.md`), `scripts/check-context-drift.sh` tripwire added to per-unit verification (2026-07-19).
 
 ## Dependency Justifications

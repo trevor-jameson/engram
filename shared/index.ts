@@ -56,6 +56,18 @@ export function splitCardBody(body: string): CardBodyParts | undefined {
 
 export type GradeResult = "pass" | "lapse";
 
+/** Frontmatter of a session-log file (`logs/YYYY-MM-DD.md`). */
+export interface SessionLog {
+  date: string;
+  /** `source` values that appeared in that session's queue. */
+  sources: string[];
+}
+
+export interface RecallContextResponse {
+  /** Sources from the most recent prior session's log; null on the first-ever session. */
+  lastSources: string[] | null;
+}
+
 /** The only frontmatter fields the scheduler may mutate. */
 export type SchedulerPatch = Partial<Pick<CardFrontmatter, "box" | "due" | "lapses">>;
 

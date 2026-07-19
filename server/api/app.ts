@@ -1,6 +1,13 @@
 import { Hono } from "hono";
-import type { CardsResponse, GradeResult, QueueResponse } from "@engram/shared";
+import type {
+  Card,
+  CardsResponse,
+  GradeResult,
+  QueueResponse,
+  RecallContextResponse,
+} from "@engram/shared";
 import { VaultError, type Vault } from "../vault/cards.ts";
+import type { SessionLogStore } from "../vault/logs.ts";
 import { buildQueue } from "../scheduler/queue.ts";
 import { grade } from "../scheduler/leitner.ts";
 import { isLeech } from "../scheduler/leech.ts";
@@ -35,7 +42,12 @@ function isGradeResult(value: unknown): value is GradeResult {
   return value === "pass" || value === "lapse";
 }
 
-export function createApp(vault: Vault, options: AppOptions = {}): Hono {
+/** Unique `source` values of a queue, in queue order. */
+function queueSources(queue: Card[]): string[] {
+  return [...new Set(queue.map((card) => card.source))];
+}
+
+export function createApp(vault: Vault, logs: SessionLogStore, options: AppOptions = {}): Hono {
   const today = options.today ?? todayLocal;
   const rng = options.rng ?? Math.random;
   const app = new Hono();
@@ -92,6 +104,32 @@ export function createApp(vault: Vault, options: AppOptions = {}): Hono {
     }
     const updated = vault.updateFrontmatter(card.id, grade(card, result, today()));
     return c.json(toCardDTO(updated));
+  });
+
+  app.get("/api/session/recall-context", (c) => {
+    const last = logs.readLatestBefore(today());
+    const response: RecallContextResponse = { lastSources: last?.sources ?? null };
+    return c.json(response);
+  });
+
+  app.post("/api/session/recall", async (c) => {
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: "request body must be JSON" }, 400);
+    }
+    const text =
+      typeof body === "object" && body !== null && "text" in body
+        ? (body as Record<string, unknown>)["text"]
+        : undefined;
+    if (typeof text !== "string") {
+      return c.json({ error: 'body must be { "text": string } (empty text is allowed)' }, 400);
+    }
+
+    const date = today();
+    const queue = buildQueue(vault.listCards().cards, date, rng);
+    return c.json(logs.writeRecall(date, queueSources(queue), text));
   });
 
   return app;

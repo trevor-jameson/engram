@@ -3,6 +3,8 @@ import type {
   CardsResponse,
   GradeResult,
   QueueResponse,
+  RecallContextResponse,
+  SessionLog,
 } from "@engram/shared";
 
 export class ApiError extends Error {
@@ -42,5 +44,12 @@ export const api = {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ result }),
+    }),
+  getRecallContext: () => request<RecallContextResponse>("/api/session/recall-context"),
+  postRecall: (text: string) =>
+    request<SessionLog>("/api/session/recall", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text }),
     }),
 };

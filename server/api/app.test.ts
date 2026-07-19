@@ -58,8 +58,14 @@ function seededRng(seed: number): () => number {
   };
 }
 
+/** Card-route tests don't touch session logs; a stub keeps them isolated. */
+const stubLogs = {
+  readLatestBefore: () => undefined,
+  writeRecall: (date: string, sources: string[]) => ({ date, sources }),
+};
+
 function makeApp(vault: Vault, seed = 1) {
-  return createApp(vault, { today: () => TODAY, rng: seededRng(seed) });
+  return createApp(vault, stubLogs, { today: () => TODAY, rng: seededRng(seed) });
 }
 
 describe("GET /api/queue", () => {
