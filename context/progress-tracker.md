@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Implementation, units 01–02 complete (2026-07-18).
+- Implementation, units 01–03 complete (2026-07-19).
 
 ## Current Goal
 
-- Begin unit 03 (scheduler core, pure) per `context/specs/03-scheduler.md`.
+- Begin unit 04 (session & grading API) per `context/specs/04-session-api.md`.
 
 ## Completed
 
@@ -17,13 +17,15 @@ Update this file after every meaningful implementation change.
 
 - Unit 02 — shared types & vault card I/O (2026-07-18): `shared/` exports `Card`, `CardType`/`CARD_TYPES`, `CardFrontmatter`, `CardError` shapes, and `splitCardBody` (the signed-off `Q:`/`A:` split). `server/vault/cards.ts` implements `openVault(vaultPath)` → `listCards` (invalid files reported, never dropped or rewritten), `readCard`, `parseCard` (gray-matter + boundary validation of every frontmatter field; unquoted YAML dates normalized to `YYYY-MM-DD` strings), `writeCard` (rejects source-less or non-`Q:/A:` cards), `updateFrontmatter` (scheduler-facing; only `box`/`due`/`lapses`), `deleteCard`, and `generateCardId` (signed-off `<slug>-<YYYYMMDDHHmmss>` scheme). Card IDs validated against path traversal; API surface never exposes paths. 52 tests pass, all file I/O against fixture folders/temp dirs. Verified byte-stability end-to-end on a copy of the scratch vault: patching `box`+`due` changed exactly those two lines, body (incl. `$$...$$`) byte-identical.
 
+- Unit 03 — scheduler core (2026-07-19): pure functions in `server/scheduler/` — `dates.ts` (`addDays`, `isDue`), `leitner.ts` (`grade` pass/lapse with box cap/floor and per-box due dates, `resetForRewrite`, `newCardDefaults`), `leech.ts` (`isLeech`, threshold 4, derived on read — never written), `queue.ts` (`buildQueue`: leech exclusion → weighted cap 25 most-overdue-first with problem cards counting 2 → floor-as-fill 5 → source interleaving with injectable RNG). `SchedulerPatch`/`GradeResult` moved to `shared/` so the scheduler needs no vault import. Purity enforced by a scoped ESLint `no-restricted-imports` rule (fs/http/net/child_process and `**/vault/**` banned in `server/scheduler/`), negative-tested. 36 scheduler tests; suite total 88, all green.
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-- Unit 03: `server/scheduler/` pure functions — Leitner transitions, queue build (cap 25/floor 5, problem weighting, source interleaving), leech detection.
+- Unit 04: session & grading API (`server/api/`, Hono) wiring vault I/O and the scheduler behind localhost-only routes.
 
 ## Open Questions
 
@@ -42,6 +44,8 @@ Update this file after every meaningful implementation change.
 - Unit 02: `gray-matter` added as the server's first runtime dependency (pre-pinned in the build plan; sole frontmatter parser/writer per code-standards). `@engram/shared` consumed as a workspace source package (`exports` → `index.ts`; Node type stripping resolves it through the pnpm symlink, no build step).
 - Unit 02: `updateFrontmatter` writes surgically — it replaces only the patched `box`/`due`/`lapses` lines in the raw frontmatter text rather than re-serializing through gray-matter, because js-yaml re-serialization would reformat user-authored YAML (date quoting, spacing) and break the byte-stability rule. gray-matter remains the only parser, and the writer for app-authored files (`writeCard`).
 - Unit 02: server `build` script changed from emitting `dist/` to `tsc --noEmit` — nothing executes compiled output (Node runs TS source via type stripping), and emitting would complicate cross-package imports for no consumer.
+- Unit 03: at the weighted-cap boundary, queue selection stops at the first card that does not fit (strict overdue-ness priority) rather than skipping it for a later lighter card — no card is ever queued ahead of a more-overdue one, and overflow carries by overdue-ness exactly as specced (decided 2026-07-19; the spec left the boundary case open).
+- Unit 03: interleaving is two-regime — when the dominant source exceeds ceil(n/2), fractional-position spreading places minority cards evenly and accepts unavoidable same-source runs; otherwise a greedy largest-remaining-source pick guarantees zero adjacent same-source cards. RNG is injectable for deterministic tests.
 - File formats signed off 2026-07-18: card ID = filename sans `.md`, app-created files `<front-slug>-<timestamp>.md` (rewrites never rename); session log `logs/YYYY-MM-DD.md` with `date`/`sources` frontmatter, append on same-day re-run; inbox = single `inbox.md`, one list item per capture, no metadata, deletion by exact line match. Details in `context/specs/` 02/07/08.
 
 ## Session Notes
