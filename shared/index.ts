@@ -114,6 +114,17 @@ export interface QueueResponse {
   counts: QueueCounts;
 }
 
+/** Leech-flagged cards awaiting a front rewrite (or deletion). */
+export interface LeechesResponse {
+  cards: CardDTO[];
+}
+
+/** Body of POST /api/cards/:id/rewrite — the back is kept when omitted. */
+export interface RewriteCardRequest {
+  front: string;
+  back?: string;
+}
+
 export interface CardsResponse {
   cards: CardSummary[];
   /** Files that are not valid cards — reported, never silently dropped. */

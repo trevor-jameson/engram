@@ -6,6 +6,7 @@ import {
   type CardType,
   type GradeResult,
   type InboxResponse,
+  type LeechesResponse,
   type QueueResponse,
   type RecallContextResponse,
 } from "@engram/shared";
@@ -13,7 +14,7 @@ import { generateCardId, VaultError, type Vault } from "../vault/cards.ts";
 import type { SessionLogStore } from "../vault/logs.ts";
 import type { InboxStore } from "../vault/inbox.ts";
 import { buildQueue } from "../scheduler/queue.ts";
-import { grade, newCardDefaults } from "../scheduler/leitner.ts";
+import { grade, newCardDefaults, resetForRewrite } from "../scheduler/leitner.ts";
 import { isLeech } from "../scheduler/leech.ts";
 import { isDue } from "../scheduler/dates.ts";
 import { toCardDTO, toCardSummary } from "./dto.ts";
@@ -152,6 +153,44 @@ export function createApp(stores: AppStores, options: AppOptions = {}): Hono {
     const date = today();
     const queue = buildQueue(vault.listCards().cards, date, rng);
     return c.json(logs.writeRecall(date, queueSources(queue), text));
+  });
+
+  app.get("/api/leeches", (c) => {
+    const { cards } = vault.listCards();
+    const response: LeechesResponse = { cards: cards.filter(isLeech).map(toCardDTO) };
+    return c.json(response);
+  });
+
+  app.post("/api/cards/:id/rewrite", async (c) => {
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: "request body must be JSON" }, 400);
+    }
+    const record = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+    const front = record["front"];
+    const back = record["back"];
+    if (typeof front !== "string" || front.trim() === "") {
+      return c.json({ error: '"front" is required and must be a non-empty string' }, 400);
+    }
+    if (back !== undefined && (typeof back !== "string" || back.trim() === "")) {
+      return c.json({ error: '"back" must be a non-empty string when present' }, 400);
+    }
+
+    const card = vault.readCard(c.req.param("id"));
+    if (!isLeech(card)) {
+      return c.json({ error: "card is not leech-flagged; the rewrite flow only applies to leeches" }, 409);
+    }
+    vault.rewriteBody(card.id, front, back);
+    const updated = vault.updateFrontmatter(card.id, resetForRewrite(today()));
+    return c.json(toCardDTO(updated));
+  });
+
+  app.delete("/api/cards/:id", (c) => {
+    const id = c.req.param("id");
+    vault.deleteCard(id);
+    return c.json({ deleted: id });
   });
 
   app.get("/api/inbox", (c) => {

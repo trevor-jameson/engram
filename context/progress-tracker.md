@@ -4,11 +4,11 @@ Update after every meaningful implementation change. Retention policy: `ai-workf
 
 ## Current Phase
 
-- Implementation, units 01–08 complete (2026-07-19).
+- Implementation, units 01–09 complete (2026-07-19).
 
 ## Next Up
 
-- Unit 09: leech rewrite flow (`server/api/` + `web/`, split steps) per `context/specs/09-leech-rewrite.md`.
+- Unit 10: v1 acceptance pass (verification only) per `context/specs/10-acceptance.md`.
 
 ## In Progress
 
@@ -29,6 +29,7 @@ Update after every meaningful implementation change. Retention policy: `ai-workf
 - Unit 06 — review flow UI & card rendering: shared `CardMarkdown` renderer (remark + GFM + locally bundled KaTeX), pure reveal/grade reducer, one-card-at-a-time `ReviewScreen` with retry-safe grading, 14 web tests, 5 scratch-vault render-check cards (2026-07-19).
 - Unit 07 — free recall & session log: `server/vault/logs.ts` (create/append `logs/YYYY-MM-DD.md`, read latest prior), recall-context + recall routes, real `RecallScreen` with prior-source prompt, 18 new tests (2026-07-19).
 - Unit 08 — inbox capture & triage: `server/vault/inbox.ts` (append/list/remove-by-exact-line), inbox + card-creation routes (`createApp` now takes an `AppStores` object), live header capture, real triage screen with type-template conversion, 17 new tests (2026-07-19).
+- Unit 09 — leech rewrite flow: `vault.rewriteBody` content-edit path (spec 09 corrected: `writeCard` is create-only), leeches/rewrite/delete routes, `RewriteScreen` after triage with live renderer preview, 12 new tests; architecture §Write Paths updated (2026-07-19).
 - Context-drift mitigation pass: fact-ownership map + drift-repair rule in `ai-workflow-rules.md`, de-dup of restated facts across context files, `design-brief.md` retired (schema absorbed into `architecture.md`), `scripts/check-context-drift.sh` tripwire added to per-unit verification (2026-07-19).
 
 ## Dependency Justifications

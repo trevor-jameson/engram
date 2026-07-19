@@ -32,7 +32,7 @@ interface Draft {
 }
 
 /** Session end: convert captured one-liners into cards, or discard them. */
-export function TriageScreen({ onRestart }: { onRestart: () => void }) {
+export function TriageScreen({ onNext }: { onNext: () => void }) {
   const [items, setItems] = useState<string[] | undefined>();
   const [draft, setDraft] = useState<Draft | undefined>();
   const [busy, setBusy] = useState(false);
@@ -75,7 +75,7 @@ export function TriageScreen({ onRestart }: { onRestart: () => void }) {
 
   if (items === undefined) {
     return (
-      <Frame onRestart={onRestart} done={false}>
+      <Frame onNext={onNext} done={false}>
         {error !== undefined ? (
           <Alert severity="error">{error}</Alert>
         ) : (
@@ -87,14 +87,14 @@ export function TriageScreen({ onRestart }: { onRestart: () => void }) {
 
   if (items.length === 0) {
     return (
-      <Frame onRestart={onRestart} done>
+      <Frame onNext={onNext} done>
         <Typography color="text.secondary">Inbox is empty — session complete.</Typography>
       </Frame>
     );
   }
 
   return (
-    <Frame onRestart={onRestart} done={false}>
+    <Frame onNext={onNext} done={false}>
       {error !== undefined && (
         <Alert severity="error" sx={{ width: "100%" }}>
           {error}
@@ -188,11 +188,11 @@ export function TriageScreen({ onRestart }: { onRestart: () => void }) {
 
 function Frame({
   done,
-  onRestart,
+  onNext,
   children,
 }: {
   done: boolean;
-  onRestart: () => void;
+  onNext: () => void;
   children: React.ReactNode;
 }) {
   return (
@@ -201,8 +201,8 @@ function Frame({
         Inbox triage
       </Typography>
       {children}
-      <Button variant={done ? "contained" : "outlined"} onClick={onRestart}>
-        End session
+      <Button variant={done ? "contained" : "outlined"} onClick={onNext}>
+        Continue
       </Button>
     </Stack>
   );

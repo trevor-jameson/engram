@@ -82,9 +82,9 @@ If any of these hold, converting is cheap by design: all blocking I/O is confine
 
 ### Write Paths
 
-The vault has two distinct write paths, deliberately kept separate:
+The vault has three distinct write paths, deliberately kept separate:
 
 - **`writeCard` — create-only.** It refuses (`id-collision`) to overwrite an existing card file, so card creation can never silently overwrite another card. It serializes via `serializeCard` (gray-matter's canonical format), which is why it is only for app-authored cards.
 - **`updateFrontmatter` — in-place scheduler state.** Byte-stable patch of only the changed frontmatter lines (`box`/`due`/`lapses`), preserving the user's hand-authored YAML formatting.
 
-Editing an existing card's content is a third path that does not exist yet; when added, it must not route through `writeCard`.
+- **`rewriteBody` — user-initiated content edit** (added unit 09, the leech-rewrite flow). Replaces only the `Q:`/`A:` body after the frontmatter block, whose bytes are preserved exactly; never renames the file, so the ID and Obsidian backlinks stay stable. Deliberately not routed through `writeCard`. Scheduling changes (the rewrite reset) go through `updateFrontmatter` as a separate patch.

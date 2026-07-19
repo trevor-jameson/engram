@@ -4,8 +4,10 @@ import type {
   CreateCardRequest,
   GradeResult,
   InboxResponse,
+  LeechesResponse,
   QueueResponse,
   RecallContextResponse,
+  RewriteCardRequest,
   SessionLog,
 } from "@engram/shared";
 
@@ -66,6 +68,15 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(card),
     }),
+  getLeeches: () => request<LeechesResponse>("/api/leeches"),
+  rewriteCard: (id: string, rewrite: RewriteCardRequest) =>
+    request<CardDTO>(`/api/cards/${encodeURIComponent(id)}/rewrite`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(rewrite),
+    }),
+  deleteCard: (id: string) =>
+    request<{ deleted: string }>(`/api/cards/${encodeURIComponent(id)}`, { method: "DELETE" }),
   getRecallContext: () => request<RecallContextResponse>("/api/session/recall-context"),
   postRecall: (text: string) =>
     request<SessionLog>("/api/session/recall", {

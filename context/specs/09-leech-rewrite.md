@@ -12,9 +12,11 @@ scheduling state.
    - `GET /api/leeches` → leech-flagged cards (detection is the unit 03 pure
      function over parsed cards; nothing stored).
    - `POST /api/cards/:id/rewrite` `{ front, back? }` → user-initiated edit:
-     writes the new front (and back if provided) via `writeCard`, applies
-     `resetForRewrite` (box → 1, lapses → 0, due = tomorrow). Rejects empty
-     front (400); 404 unknown id; 409 if the card is not currently a leech.
+     writes the new front (and back if provided) via a dedicated vault edit
+     path (`writeCard` is create-only per `architecture.md` §Write Paths;
+     spec corrected 2026-07-19), applies `resetForRewrite` (box → 1,
+     lapses → 0, due = tomorrow). Rejects empty front (400); 404 unknown id;
+     409 if the card is not currently a leech.
    - `DELETE /api/cards/:id` → deletes the card file (used from this flow;
      available generally).
 2. **`web/`**: rewrite surface, presented during the triage step (after

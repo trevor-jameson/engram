@@ -43,6 +43,7 @@ export interface Vault {
   readCard(id: string): Card;
   writeCard(card: Card): void;
   updateFrontmatter(id: string, patch: SchedulerPatch): Card;
+  rewriteBody(id: string, front: string, back?: string): Card;
   deleteCard(id: string): void;
 }
 
@@ -313,6 +314,35 @@ export function openVault(vaultPath: string): Vault {
       const patched = patchFrontmatterLines(raw, patch, id);
       const updated = parseCard(patched, id);
       writeFileSync(cardPath(id), patched, "utf8");
+      return updated;
+    },
+
+    // The user-initiated content-edit path (rewrite flow). Deliberately not
+    // writeCard, which is create-only; the frontmatter block's bytes are kept
+    // exactly as authored, only the body after it is replaced. Never renames.
+    rewriteBody(id: string, front: string, back?: string): Card {
+      const raw = readRaw(id);
+      const existing = parseCard(raw, id);
+      if (front.trim() === "") {
+        fail({ code: "invalid-body", cardId: id, message: "a rewritten front must be non-empty" });
+      }
+      const keptBack = back ?? splitCardBody(existing.body)?.back ?? "";
+      const body = `Q: ${front.trim()}\n\nA: ${keptBack.trim()}\n`;
+
+      const lines = raw.split("\n");
+      let end = -1;
+      for (let i = 1; i < lines.length; i++) {
+        if (lines[i]?.trim() === "---") {
+          end = i;
+          break;
+        }
+      }
+      if (lines[0]?.trim() !== "---" || end === -1) {
+        fail({ code: "invalid-frontmatter", cardId: id, message: "file has no closed frontmatter block" });
+      }
+      const rewritten = `${lines.slice(0, end + 1).join("\n")}\n${body}`;
+      const updated = parseCard(rewritten, id);
+      writeFileSync(cardPath(id), rewritten, "utf8");
       return updated;
     },
 
