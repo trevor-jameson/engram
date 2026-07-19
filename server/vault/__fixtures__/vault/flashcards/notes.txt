@@ -1,0 +1,1 @@
+Not a card — non-md files in the flashcards folder are ignored.
