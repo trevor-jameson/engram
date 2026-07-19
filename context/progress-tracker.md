@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Implementation, units 01–03 complete (2026-07-19).
+- Implementation, units 01–04 complete (2026-07-19).
 
 ## Current Goal
 
-- Begin unit 04 (session & grading API) per `context/specs/04-session-api.md`.
+- Begin unit 05 (web shell & theme) per `context/specs/05-web-shell.md`.
 
 ## Completed
 
@@ -19,13 +19,15 @@ Update this file after every meaningful implementation change.
 
 - Unit 03 — scheduler core (2026-07-19): pure functions in `server/scheduler/` — `dates.ts` (`addDays`, `isDue`), `leitner.ts` (`grade` pass/lapse with box cap/floor and per-box due dates, `resetForRewrite`, `newCardDefaults`), `leech.ts` (`isLeech`, threshold 4, derived on read — never written), `queue.ts` (`buildQueue`: leech exclusion → weighted cap 25 most-overdue-first with problem cards counting 2 → floor-as-fill 5 → source interleaving with injectable RNG). `SchedulerPatch`/`GradeResult` moved to `shared/` so the scheduler needs no vault import. Purity enforced by a scoped ESLint `no-restricted-imports` rule (fs/http/net/child_process and `**/vault/**` banned in `server/scheduler/`), negative-tested. 36 scheduler tests; suite total 88, all green.
 
+- Unit 04 — session & grading API (2026-07-19): `server/api/app.ts` exposes `createApp(vault, { today?, rng? })` (injectable clock/RNG for deterministic tests) with `GET /api/queue` (rebuilt from files per request; DTOs with split front/back plus `{ due, queued, overflow }` counts), `GET /api/cards` (frontmatter summaries + invalid-file report), `GET /api/cards/:id`, and `POST /api/cards/:id/grade` (validates body, 404 unknown id, 400 bad input, 409 leech; scheduler computes patch, `updateFrontmatter` persists). `VaultError` codes map centrally to HTTP statuses via `app.onError`. DTO types (`CardDTO`, `CardSummary`, `QueueResponse`, `CardsResponse`, `QueueCounts`) live in `shared/`; `server/api/dto.ts` derives `leech` via the scheduler. `server/index.ts` now serves the Hono app on 127.0.0.1 via `@hono/node-server`. 15 route tests (103 total). Manually verified with curl against the scratch vault: queue, pass/lapse grading visible in frontmatter on disk, queue rebuilt consistently after restart (success criterion 11); grep confirms no outbound-request code in `server/`.
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-- Unit 04: session & grading API (`server/api/`, Hono) wiring vault I/O and the scheduler behind localhost-only routes.
+- Unit 05: web shell & theme (`web/` — React + MUI, light/dark system themes, layout shell).
 
 ## Open Questions
 
@@ -46,6 +48,8 @@ Update this file after every meaningful implementation change.
 - Unit 02: server `build` script changed from emitting `dist/` to `tsc --noEmit` — nothing executes compiled output (Node runs TS source via type stripping), and emitting would complicate cross-package imports for no consumer.
 - Unit 03: at the weighted-cap boundary, queue selection stops at the first card that does not fit (strict overdue-ness priority) rather than skipping it for a later lighter card — no card is ever queued ahead of a more-overdue one, and overflow carries by overdue-ness exactly as specced (decided 2026-07-19; the spec left the boundary case open).
 - Unit 03: interleaving is two-regime — when the dominant source exceeds ceil(n/2), fractional-position spreading places minority cards evenly and accepts unavoidable same-source runs; otherwise a greedy largest-remaining-source pick guarantees zero adjacent same-source cards. RNG is injectable for deterministic tests.
+- Unit 04: `hono` + `@hono/node-server` added (Hono pre-pinned; the node adapter is Hono's official way to bind a Node listener and is what enforces the 127.0.0.1-only bind). "Today" is computed in the machine's local timezone at the API layer — a session at 11pm belongs to the local day, and the pure scheduler just receives the string.
+- Server bind host made configurable (2026-07-19, Trevor's request): `host` in `engram.config.json` / `ENGRAM_HOST` env override, default `127.0.0.1`. Default preserves the localhost-only invariant; a non-loopback value is an explicit user override. `architecture.md` config paragraph updated accordingly.
 - File formats signed off 2026-07-18: card ID = filename sans `.md`, app-created files `<front-slug>-<timestamp>.md` (rewrites never rename); session log `logs/YYYY-MM-DD.md` with `date`/`sources` frontmatter, append on same-day re-run; inbox = single `inbox.md`, one list item per capture, no metadata, deletion by exact line match. Details in `context/specs/` 02/07/08.
 
 ## Session Notes

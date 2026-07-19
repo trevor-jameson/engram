@@ -1,15 +1,12 @@
-import { createServer } from "node:http";
+import { serve } from "@hono/node-server";
 import { loadConfig } from "./vault/config.ts";
+import { openVault } from "./vault/cards.ts";
+import { createApp } from "./api/app.ts";
 
-// Placeholder entry point for unit 01: proves config loading and a
-// localhost-only server. Real routes (Hono) arrive in unit 04.
 const config = loadConfig();
+const vault = openVault(config.vaultPath);
+const app = createApp(vault);
 
-const server = createServer((_req, res) => {
-  res.setHeader("content-type", "application/json");
-  res.end(JSON.stringify({ app: "engram", phase: "scaffold" }));
-});
-
-server.listen(config.port, "127.0.0.1", () => {
-  console.log(`engram server on http://127.0.0.1:${config.port} (vault: ${config.vaultPath})`);
+serve({ fetch: app.fetch, port: config.port, hostname: config.host }, (info) => {
+  console.log(`engram server on http://${config.host}:${info.port} (vault: ${config.vaultPath})`);
 });

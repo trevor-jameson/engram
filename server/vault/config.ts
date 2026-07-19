@@ -2,12 +2,15 @@ import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 
 export const DEFAULT_PORT = 4321;
+export const DEFAULT_HOST = "127.0.0.1";
 export const CONFIG_FILENAME = "engram.config.json";
 
 export interface EngramConfig {
   /** Absolute path to the vault folder. */
   vaultPath: string;
   port: number;
+  /** Bind address for the server. Defaults to loopback; the app is localhost-only by design. */
+  host: string;
 }
 
 export class ConfigError extends Error {}
@@ -22,6 +25,7 @@ export interface LoadConfigOptions {
 interface ConfigFileContents {
   vaultPath?: string;
   port?: number;
+  host?: string;
 }
 
 function findConfigFile(startDir: string): string | undefined {
@@ -58,6 +62,12 @@ function readConfigFile(filePath: string): ConfigFileContents {
       throw new ConfigError(`${filePath}: "port" must be an integer between 1 and 65535`);
     }
     contents.port = record["port"];
+  }
+  if (record["host"] !== undefined) {
+    if (typeof record["host"] !== "string" || record["host"] === "") {
+      throw new ConfigError(`${filePath}: "host" must be a non-empty string`);
+    }
+    contents.host = record["host"];
   }
   return contents;
 }
@@ -101,5 +111,8 @@ export function loadConfig(options: LoadConfigOptions = {}): EngramConfig {
   const port =
     envPort !== undefined && envPort !== "" ? portFromEnv(envPort) : (file.port ?? DEFAULT_PORT);
 
-  return { vaultPath, port };
+  const envHost = env["ENGRAM_HOST"];
+  const host = envHost !== undefined && envHost !== "" ? envHost : (file.host ?? DEFAULT_HOST);
+
+  return { vaultPath, port, host };
 }
