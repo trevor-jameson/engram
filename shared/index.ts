@@ -54,6 +54,11 @@ export function splitCardBody(body: string): CardBodyParts | undefined {
   return { front, back };
 }
 
+export type GradeResult = "pass" | "lapse";
+
+/** The only frontmatter fields the scheduler may mutate. */
+export type SchedulerPatch = Partial<Pick<CardFrontmatter, "box" | "due" | "lapses">>;
+
 export type CardErrorCode =
   | "invalid-id"
   | "invalid-yaml"

@@ -16,6 +16,7 @@ import {
   type CardError,
   type CardFrontmatter,
   type CardType,
+  type SchedulerPatch,
 } from "@engram/shared";
 
 export class VaultError extends Error {
@@ -30,9 +31,6 @@ export class VaultError extends Error {
 
 const FLASHCARDS_DIR = "flashcards";
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-/** Frontmatter fields the scheduler may mutate; everything else is user-owned. */
-export type SchedulerPatch = Partial<Pick<CardFrontmatter, "box" | "due" | "lapses">>;
 
 export interface ListCardsResult {
   cards: Card[];
