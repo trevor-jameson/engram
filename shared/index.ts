@@ -59,6 +59,40 @@ export type GradeResult = "pass" | "lapse";
 /** The only frontmatter fields the scheduler may mutate. */
 export type SchedulerPatch = Partial<Pick<CardFrontmatter, "box" | "due" | "lapses">>;
 
+/** Card as served to the web UI: split body, derived leech flag, no paths. */
+export interface CardDTO extends CardFrontmatter {
+  id: string;
+  front: string;
+  back: string;
+  leech: boolean;
+}
+
+/** Frontmatter-only summary used by list/triage/rewrite surfaces. */
+export interface CardSummary extends CardFrontmatter {
+  id: string;
+  leech: boolean;
+}
+
+export interface QueueCounts {
+  /** Non-leech cards due today (before cap). */
+  due: number;
+  /** Cards actually in today's queue (after cap and floor fill). */
+  queued: number;
+  /** Due cards beyond the cap; they stay due and carry to tomorrow. */
+  overflow: number;
+}
+
+export interface QueueResponse {
+  cards: CardDTO[];
+  counts: QueueCounts;
+}
+
+export interface CardsResponse {
+  cards: CardSummary[];
+  /** Files that are not valid cards — reported, never silently dropped. */
+  errors: CardError[];
+}
+
 export type CardErrorCode =
   | "invalid-id"
   | "invalid-yaml"
