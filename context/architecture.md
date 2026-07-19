@@ -48,3 +48,24 @@ There is no database. **The vault's markdown files are the sole source of truth 
 4. A daily session is always completable in ≤ ~15 minutes (the queue cap enforces this).
 5. The scheduler never deletes or rewrites card content — only frontmatter state; content changes are user actions.
 6. Every card has a `source`; no card-creation path omits it (it is the interleaving key and the future archival key).
+
+## File I/O Model
+
+`server/vault/` uses **synchronous** filesystem calls (`readFileSync`, `writeFileSync`, `readdirSync`, etc.) throughout, and this is intentional — not a shortcut to migrate away from later. It fits the app's actual concurrency profile: a single local user, one machine, localhost-only, small markdown files on (by default) local disk. Under those conditions a card read/write blocks the event loop for well under a millisecond, and there is no second request to starve. Sync I/O is also what makes the read → parse → patch → write sequence in `updateFrontmatter` atomic against interleaving without any locking, and keeps error handling a plain synchronous `throw`/`try/catch` (`VaultError`) rather than pushing `async/await` up through every caller.
+
+**Revisit this only if a load-bearing assumption changes.** The trigger conditions to watch:
+
+- **The vault path moves off local disk.** `vaultPath` is configurable to any filesystem path (see Storage Model), including a network mount or a cloud-synced folder (Dropbox/iCloud/Obsidian Sync). On high-latency storage, a sync call blocks the loop for the full I/O latency.
+- **Card counts reach the thousands.** Startup `listCards` does a `readdirSync` plus one `readFileSync` per file, sequentially — O(n) blocking I/O. Fine for hundreds of local cards; a visible stall for thousands on slow storage.
+- **The app gains real concurrency.** Any move away from the single-user, single-request model (multi-user, background workers competing for the loop) invalidates the premise.
+
+If any of these hold, converting is cheap by design: all blocking I/O is confined to `server/vault/` behind the `Vault` interface, so the change is contained to one module and invisible to callers.
+
+### Write Paths
+
+The vault has two distinct write paths, deliberately kept separate:
+
+- **`writeCard` — create-only.** It refuses (`id-collision`) to overwrite an existing card file, so card creation can never silently overwrite another card. It serializes via `serializeCard` (gray-matter's canonical format), which is why it is only for app-authored cards.
+- **`updateFrontmatter` — in-place scheduler state.** Byte-stable patch of only the changed frontmatter lines (`box`/`due`/`lapses`), preserving the user's hand-authored YAML formatting.
+
+Editing an existing card's content is a third path that does not exist yet; when added, it must not route through `writeCard`.

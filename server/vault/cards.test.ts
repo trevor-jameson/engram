@@ -216,6 +216,17 @@ describe("writeCard", () => {
     const reparsed = parseCard(serializeCard(card), card.id);
     expect(reparsed).toEqual(card);
   });
+
+  it("refuses to overwrite an existing card id rather than clobbering it", () => {
+    const vault = openVault(makeTempVault());
+    vault.writeCard(card);
+    expectCardError(
+      () => vault.writeCard({ ...card, body: "Q: Different?\n\nA: Different.\n" }),
+      "id-collision",
+    );
+    // original content is untouched
+    expect(vault.readCard(card.id).body).toBe(card.body);
+  });
 });
 
 describe("updateFrontmatter", () => {

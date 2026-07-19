@@ -59,6 +59,7 @@ export type CardErrorCode =
   | "invalid-yaml"
   | "invalid-frontmatter"
   | "invalid-body"
+  | "id-collision"
   | "not-found"
   | "vault-missing";
 

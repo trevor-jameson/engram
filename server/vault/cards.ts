@@ -296,8 +296,16 @@ export function openVault(vaultPath: string): Vault {
     writeCard(card: Card): void {
       validateId(card.id);
       validateCard(card);
+      const filePath = cardPath(card.id);
+      if (existsSync(filePath)) {
+        fail({
+          code: "id-collision",
+          cardId: card.id,
+          message: `a card file already exists for id "${card.id}"; refusing to overwrite`,
+        });
+      }
       mkdirSync(cardsDir, { recursive: true });
-      writeFileSync(cardPath(card.id), serializeCard(card), "utf8");
+      writeFileSync(filePath, serializeCard(card), "utf8");
     },
 
     updateFrontmatter(id: string, patch: SchedulerPatch): Card {
