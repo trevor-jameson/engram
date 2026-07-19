@@ -1,0 +1,4 @@
+{
+  "vaultPath": "/absolute/path/to/vault",
+  "port": 4321
+}

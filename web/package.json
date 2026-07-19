@@ -1,0 +1,13 @@
+{
+  "name": "@engram/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "vite": "^8.1.5"
+  }
+}

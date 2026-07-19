@@ -1,0 +1,11 @@
+{
+  "name": "@engram/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "ENGRAM_VAULT_PATH=../scratch-vault node --watch index.ts"
+  }
+}
