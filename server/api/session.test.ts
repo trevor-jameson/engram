@@ -40,8 +40,10 @@ function seedCard(vault: Vault, overrides: Partial<Card> = {}): Card {
   return card;
 }
 
+const stubInbox = { list: () => [], append: () => undefined, remove: () => undefined };
+
 function makeApp(vault: Vault, logs: SessionLogStore, today = TODAY) {
-  return createApp(vault, logs, { today: () => today, rng: () => 0.5 });
+  return createApp({ vault, logs, inbox: stubInbox }, { today: () => today, rng: () => 0.5 });
 }
 
 describe("GET /api/session/recall-context", () => {

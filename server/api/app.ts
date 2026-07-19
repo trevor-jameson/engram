@@ -1,15 +1,19 @@
 import { Hono } from "hono";
-import type {
-  Card,
-  CardsResponse,
-  GradeResult,
-  QueueResponse,
-  RecallContextResponse,
+import {
+  CARD_TYPES,
+  type Card,
+  type CardsResponse,
+  type CardType,
+  type GradeResult,
+  type InboxResponse,
+  type QueueResponse,
+  type RecallContextResponse,
 } from "@engram/shared";
-import { VaultError, type Vault } from "../vault/cards.ts";
+import { generateCardId, VaultError, type Vault } from "../vault/cards.ts";
 import type { SessionLogStore } from "../vault/logs.ts";
+import type { InboxStore } from "../vault/inbox.ts";
 import { buildQueue } from "../scheduler/queue.ts";
-import { grade } from "../scheduler/leitner.ts";
+import { grade, newCardDefaults } from "../scheduler/leitner.ts";
 import { isLeech } from "../scheduler/leech.ts";
 import { isDue } from "../scheduler/dates.ts";
 import { toCardDTO, toCardSummary } from "./dto.ts";
@@ -47,7 +51,25 @@ function queueSources(queue: Card[]): string[] {
   return [...new Set(queue.map((card) => card.source))];
 }
 
-export function createApp(vault: Vault, logs: SessionLogStore, options: AppOptions = {}): Hono {
+/** Extracts a trimmed, non-empty single-line `text` field from a request body. */
+function textField(body: unknown): string | undefined {
+  const value =
+    typeof body === "object" && body !== null && "text" in body
+      ? (body as Record<string, unknown>)["text"]
+      : undefined;
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed === "" || trimmed.includes("\n") ? undefined : trimmed;
+}
+
+export interface AppStores {
+  vault: Vault;
+  logs: SessionLogStore;
+  inbox: InboxStore;
+}
+
+export function createApp(stores: AppStores, options: AppOptions = {}): Hono {
+  const { vault, logs, inbox } = stores;
   const today = options.today ?? todayLocal;
   const rng = options.rng ?? Math.random;
   const app = new Hono();
@@ -130,6 +152,96 @@ export function createApp(vault: Vault, logs: SessionLogStore, options: AppOptio
     const date = today();
     const queue = buildQueue(vault.listCards().cards, date, rng);
     return c.json(logs.writeRecall(date, queueSources(queue), text));
+  });
+
+  app.get("/api/inbox", (c) => {
+    const response: InboxResponse = { items: inbox.list() };
+    return c.json(response);
+  });
+
+  app.post("/api/inbox", async (c) => {
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: "request body must be JSON" }, 400);
+    }
+    const text = textField(body);
+    if (text === undefined) {
+      return c.json({ error: 'body must be { "text": string }, a non-empty single line' }, 400);
+    }
+    inbox.append(text);
+    const response: InboxResponse = { items: inbox.list() };
+    return c.json(response);
+  });
+
+  app.delete("/api/inbox", async (c) => {
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: "request body must be JSON" }, 400);
+    }
+    const text = textField(body);
+    if (text === undefined) {
+      return c.json({ error: 'body must be { "text": string }, a non-empty single line' }, 400);
+    }
+    inbox.remove(text);
+    const response: InboxResponse = { items: inbox.list() };
+    return c.json(response);
+  });
+
+  app.post("/api/cards", async (c) => {
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: "request body must be JSON" }, 400);
+    }
+    const record = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+    const problems: string[] = [];
+    const requireText = (key: "front" | "back" | "source"): string => {
+      const value = record[key];
+      if (typeof value !== "string" || value.trim() === "") {
+        problems.push(`"${key}" is required and must be a non-empty string`);
+        return "";
+      }
+      return value.trim();
+    };
+    const front = requireText("front");
+    const back = requireText("back");
+    const source = requireText("source");
+    const type = record["type"];
+    if (typeof type !== "string" || !(CARD_TYPES as readonly string[]).includes(type)) {
+      problems.push(`"type" must be one of: ${CARD_TYPES.join(", ")}`);
+    }
+    const inboxText = record["inboxText"];
+    if (inboxText !== undefined && typeof inboxText !== "string") {
+      problems.push('"inboxText" must be a string when present');
+    }
+    if (problems.length > 0) {
+      return c.json({ error: problems.join("; ") }, 400);
+    }
+
+    const date = today();
+    const card: Card = {
+      id: generateCardId(front),
+      ...newCardDefaults(date),
+      source,
+      type: type as CardType,
+      body: `Q: ${front}\n\nA: ${back}\n`,
+    };
+    vault.writeCard(card);
+    if (typeof inboxText === "string") {
+      try {
+        inbox.remove(inboxText);
+      } catch (error) {
+        // The card is already created; a capture line that vanished under an
+        // external edit is not a failure of this request.
+        if (!(error instanceof VaultError) || error.cardError.code !== "not-found") throw error;
+      }
+    }
+    return c.json(toCardDTO(card), 201);
   });
 
   return app;

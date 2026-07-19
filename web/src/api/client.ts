@@ -1,7 +1,9 @@
 import type {
   CardDTO,
   CardsResponse,
+  CreateCardRequest,
   GradeResult,
+  InboxResponse,
   QueueResponse,
   RecallContextResponse,
   SessionLog,
@@ -44,6 +46,25 @@ export const api = {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ result }),
+    }),
+  getInbox: () => request<InboxResponse>("/api/inbox"),
+  captureInbox: (text: string) =>
+    request<InboxResponse>("/api/inbox", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text }),
+    }),
+  discardInbox: (text: string) =>
+    request<InboxResponse>("/api/inbox", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text }),
+    }),
+  createCard: (card: CreateCardRequest) =>
+    request<CardDTO>("/api/cards", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(card),
     }),
   getRecallContext: () => request<RecallContextResponse>("/api/session/recall-context"),
   postRecall: (text: string) =>

@@ -68,6 +68,21 @@ export interface RecallContextResponse {
   lastSources: string[] | null;
 }
 
+export interface InboxResponse {
+  /** Capture lines currently in inbox.md, in file order. */
+  items: string[];
+}
+
+/** Body of POST /api/cards — triage converting a capture (or scratch creation). */
+export interface CreateCardRequest {
+  front: string;
+  back: string;
+  source: string;
+  type: CardType;
+  /** When set, the matching inbox line is removed in the same request. */
+  inboxText?: string;
+}
+
 /** The only frontmatter fields the scheduler may mutate. */
 export type SchedulerPatch = Partial<Pick<CardFrontmatter, "box" | "due" | "lapses">>;
 

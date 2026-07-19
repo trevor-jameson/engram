@@ -58,14 +58,22 @@ function seededRng(seed: number): () => number {
   };
 }
 
-/** Card-route tests don't touch session logs; a stub keeps them isolated. */
+/** Card-route tests don't touch session logs or the inbox; stubs keep them isolated. */
 const stubLogs = {
   readLatestBefore: () => undefined,
   writeRecall: (date: string, sources: string[]) => ({ date, sources }),
 };
+const stubInbox = {
+  list: () => [],
+  append: () => undefined,
+  remove: () => undefined,
+};
 
 function makeApp(vault: Vault, seed = 1) {
-  return createApp(vault, stubLogs, { today: () => TODAY, rng: seededRng(seed) });
+  return createApp(
+    { vault, logs: stubLogs, inbox: stubInbox },
+    { today: () => TODAY, rng: seededRng(seed) },
+  );
 }
 
 describe("GET /api/queue", () => {
