@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Implementation, units 01–04 complete (2026-07-19).
+- Implementation, units 01–05 complete (2026-07-19).
 
 ## Current Goal
 
-- Begin unit 05 (web shell & theme) per `context/specs/05-web-shell.md`.
+- Begin unit 06 (review flow UI & card rendering) per `context/specs/06-review-ui.md`.
 
 ## Completed
 
@@ -21,13 +21,15 @@ Update this file after every meaningful implementation change.
 
 - Unit 04 — session & grading API (2026-07-19): `server/api/app.ts` exposes `createApp(vault, { today?, rng? })` (injectable clock/RNG for deterministic tests) with `GET /api/queue` (rebuilt from files per request; DTOs with split front/back plus `{ due, queued, overflow }` counts), `GET /api/cards` (frontmatter summaries + invalid-file report), `GET /api/cards/:id`, and `POST /api/cards/:id/grade` (validates body, 404 unknown id, 400 bad input, 409 leech; scheduler computes patch, `updateFrontmatter` persists). `VaultError` codes map centrally to HTTP statuses via `app.onError`. DTO types (`CardDTO`, `CardSummary`, `QueueResponse`, `CardsResponse`, `QueueCounts`) live in `shared/`; `server/api/dto.ts` derives `leech` via the scheduler. `server/index.ts` now serves the Hono app on 127.0.0.1 via `@hono/node-server`. 15 route tests (103 total). Manually verified with curl against the scratch vault: queue, pass/lapse grading visible in frontmatter on disk, queue rebuilt consistently after restart (success criterion 11); grep confirms no outbound-request code in `server/`.
 
+- Unit 05 — web shell & theme (2026-07-19): `web/src/theme.ts` implements every `ui-context.md` token in two `createTheme` objects (palette slots light/dark, `shape.borderRadius` 8, Card/Dialog 12, pill chips, shadows capped at elevation 2, `.engram-card-content` class at 1.125rem/1.7) selected by `prefers-color-scheme` with no manual toggle. Layout: persistent minimal header with inert inbox-capture field (`Header.tsx`), single centered 720px column, linear recall → review → triage state machine with labeled placeholder screens. Typed API client (`web/src/api/client.ts`) wraps the four unit-04 routes with `shared/` DTOs; dev-mode Vite proxy keeps `/api` same-origin (both ends localhost). Verified: shell serves, queue data flows through the proxy into the review placeholder's fetch path, 404s carry typed errors; no hex values outside `theme.ts`; production bundle's only URL strings are inert constants (SVG namespace, framework error-doc links) — zero external asset loads.
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-- Unit 05: web shell & theme (`web/` — React + MUI, light/dark system themes, layout shell).
+- Unit 06: review flow UI & card rendering (`web/` — one-card-at-a-time review, markdown + code + KaTeX rendering, pass/lapse grading).
 
 ## Open Questions
 
@@ -50,6 +52,7 @@ Update this file after every meaningful implementation change.
 - Unit 03: interleaving is two-regime — when the dominant source exceeds ceil(n/2), fractional-position spreading places minority cards evenly and accepts unavoidable same-source runs; otherwise a greedy largest-remaining-source pick guarantees zero adjacent same-source cards. RNG is injectable for deterministic tests.
 - Unit 04: `hono` + `@hono/node-server` added (Hono pre-pinned; the node adapter is Hono's official way to bind a Node listener and is what enforces the 127.0.0.1-only bind). "Today" is computed in the machine's local timezone at the API layer — a session at 11pm belongs to the local day, and the pure scheduler just receives the string.
 - Server bind host made configurable (2026-07-19, Trevor's request): `host` in `engram.config.json` / `ENGRAM_HOST` env override, default `127.0.0.1`. Default preserves the localhost-only invariant; a non-loopback value is an explicit user override. `architecture.md` config paragraph updated accordingly.
+- Unit 05 dependencies: `react`/`react-dom` + types, `@mui/material`, `@mui/icons-material`, `@vitejs/plugin-react` (all pre-pinned), and `@emotion/react`/`@emotion/styled` (MUI's required styling peer — part of the MUI decision, not a new choice).
 - File formats signed off 2026-07-18: card ID = filename sans `.md`, app-created files `<front-slug>-<timestamp>.md` (rewrites never rename); session log `logs/YYYY-MM-DD.md` with `date`/`sources` frontmatter, append on same-day re-run; inbox = single `inbox.md`, one list item per capture, no metadata, deletion by exact line match. Details in `context/specs/` 02/07/08.
 
 ## Session Notes
