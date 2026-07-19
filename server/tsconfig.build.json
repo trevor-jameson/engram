@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "outDir": "dist",
-    "allowImportingTsExtensions": true,
-    "rewriteRelativeImportExtensions": true
-  },
-  "exclude": ["dist", "**/*.test.ts", "**/__fixtures__/**"]
-}
