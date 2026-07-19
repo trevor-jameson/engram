@@ -3,3 +3,4 @@ dist/
 *.tsbuildinfo
 engram.config.json
 scratch-vault/
+.DS_Store
